@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 import pickle
 import numpy as np
-from elasticsearch import Elasticsearch
+# from elasticsearch import Elasticsearch
 
 
 popular_df = pickle.load(open('popular.pkl', 'rb'))
@@ -13,9 +13,9 @@ similarity_scores = pickle.load(open('similarity_scores.pkl', 'rb'))
 #
 # print(f"Connected to ElasticSearch cluster `{es.info().body['cluster_name']}`")
 
-es = Elasticsearch([{"host": "localhost", "port": 9200, "scheme": "http"}])
-print(es.ping())
-print(f"Connected to Elasticsearch cluster `{es.info().body['cluster_name']}`")
+# es = Elasticsearch([{"host": "localhost", "port": 9200, "scheme": "http"}])
+# print(es.ping())
+# print(f"Connected to Elasticsearch cluster `{es.info().body['cluster_name']}`")
 
 app = Flask(__name__)
 
