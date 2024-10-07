@@ -60,23 +60,28 @@
   {% raw %}
   <script>
     const search = instantsearch({
-      indexName: "movies",
+      indexName: "books",
       searchClient: instantMeiliSearch(
-        "http://localhost:7700"
+        "http://localhost:7700",
+        "",
+        {
+          placeholderSearch: true,
+          // pirmaryKey: "Title"
+        }
       ).searchClient
       });
       search.addWidgets([
         instantsearch.widgets.searchBox({
           container: "#searchbox"
         }),
-        instantsearch.widgets.configure({ hitsPerPage: 8 }),
+        instantsearch.widgets.configure({ hitsPerPage: 5 }),
         instantsearch.widgets.hits({
           container: "#hits",
           templates: {
           item: `
             <div>
             <div class="hit-name">
-                  {{#helpers.highlight}}{ "attribute": "title" }{{/helpers.highlight}}
+                  {{#helpers.highlight}}{ "attribute": "Title" }{{/helpers.highlight}}
             </div>
             </div>
           `
