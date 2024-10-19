@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <title>Book Recommender System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@meilisearch/instant-meilisearch/templates/basic_search.css" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@meilisearch/instant-meilisearch/templates/basic_search.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 </head>
 
 <body>
@@ -25,71 +27,65 @@
     <div class="wrapper">
         <div id="searchbox" focus></div>
         <div id="hits"></div>
-    </div>
-
-    {% if data %}
-
-    <div class="container">
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-
-
-            {% for i in data %}
-            <div class="col-md-3">
-                <div class="col">
-                    <div class="card shadow-sm">
-                        <img class="bd-placeholder-img card-img-top" width="100%" height="225" role="img"
-                            src="{{i[2]}}">
-                        <div class="card-body">
-                            <p class="text-white">{{i[0]}}</p>
-                            <h4 class="text-white">{{i[1]}}</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-
-            {% endif %}
-
-        </div>
-    </div>
-
+    </div>    
 </body>
 
 <script src="https://cdn.jsdelivr.net/npm/@meilisearch/instant-meilisearch/dist/instant-meilisearch.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4"></script>
-  {% raw %}
-  <script>
+<script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4"></script>
+
+    {% raw %}
+<script>
     const search = instantsearch({
-      indexName: "books",
-      searchClient: instantMeiliSearch(
-        "http://localhost:7700",
-        "",
-        {
-          placeholderSearch: true,
-          // pirmaryKey: "Title"
-        }
-      ).searchClient
-      });
-      search.addWidgets([
+        indexName: "books",
+        searchClient: instantMeiliSearch(
+            "http://localhost:7700",
+            "",
+            {
+                placeholderSearch: false,
+                pirmaryKey: "Title"
+            }
+        ).searchClient
+    });
+    search.addWidgets([
         instantsearch.widgets.searchBox({
-          container: "#searchbox"
+            container: "#searchbox"
         }),
         instantsearch.widgets.configure({ hitsPerPage: 5 }),
         instantsearch.widgets.hits({
-          container: "#hits",
-          templates: {
-          item: `
-            <div>
-            <div class="hit-name">
-                  {{#helpers.highlight}}{ "attribute": "Title" }{{/helpers.highlight}}
-            </div>
-            </div>
+            container: "#hits",
+            templates: {
+                item: `
+                <div class = "hit" style="cursor : pointer" onclick='hello("{{Title}}")'>
+                    <div class="hit-name" >
+                        {{#helpers.highlight}}{ "attribute": "Title" }{{/helpers.highlight}}
+                    </div>
+                    <div>
+                        {{ Author }}
+                    </div>
+                </div>
           `
-          }
+            }
         })
-      ]);
-      search.start();
-  </script>
-  {% endraw %}
+    ]);
+    search.start();
+
+    async function hello(title){
+
+        res = await fetch('/recommend_books',{
+            method: 'POST',
+            headers:{
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({book_title: title}),
+        });
+
+        const data = await res.json();
+        const hml = data.html;
+        const root = document.querySelector('html');
+        root.innerHTML = '';
+        root.innerHTML = hml;
+    }
+</script>
+{% endraw %}
 
 </html>

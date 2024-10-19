@@ -1,66 +1,67 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request,jsonify
 import pickle
 import numpy as np
-# from elasticsearch import Elasticsearch
+from colorama import Fore, Style
 
 
-popular_df = pickle.load(open('popular.pkl', 'rb'))
-pt = pickle.load(open('pt.pkl', 'rb'))
-books = pickle.load(open('books.pkl', 'rb'))
-similarity_scores = pickle.load(open('similarity_scores.pkl', 'rb'))
-
-# es = Elasticsearch(['https://localhost:9200'], http_auth=('elastic', 'Sahu@2909'), verify_certs=False)
-#
-# print(f"Connected to ElasticSearch cluster `{es.info().body['cluster_name']}`")
-
-# es = Elasticsearch([{"host": "localhost", "port": 9200, "scheme": "http"}])
-# print(es.ping())
-# print(f"Connected to Elasticsearch cluster `{es.info().body['cluster_name']}`")
+popular_df = pickle.load(open("popular.pkl", "rb"))
+pt = pickle.load(open("pt.pkl", "rb"))
+books = pickle.load(open("books.pkl", "rb"))
+similarity_scores = pickle.load(open("similarity_scores.pkl", "rb"))
 
 app = Flask(__name__)
 
-
-# @app.route('/search')
-# def search_autocomplete():
-#     return ""
-
-
-@app.route('/')
+@app.route("/")
 def index():
-    return render_template('index.html',
-                           book_name=list(popular_df['Book-Title'].values),
-                           author=list(popular_df['Book-Author'].values),
-                           image=list(popular_df['Image-URL-M'].values),
-                           votes=list(popular_df['num_ratings'].values),
-                           rating=list(popular_df['avg_rating'].values)
-                           )
+    return render_template(
+        "index.html",
+        book_name=list(popular_df["Book-Title"].values),
+        author=list(popular_df["Book-Author"].values),
+        image=list(popular_df["Image-URL-M"].values),
+        votes=list(popular_df["num_ratings"].values),
+        rating=list(popular_df["avg_rating"].values),
+    )
 
 
-@app.route('/recommend')
+@app.route("/recommend")
 def recommend_ui():
-    return render_template('recommend.html')
+    return render_template("recommend.html")
 
 
-@app.route('/recommend_books',methods=['post'])
+@app.route("/recommend_books", methods=["post"])
 def recommend():
-    user_input = request.form.get('user_input')
-    index = np.where(pt.index == user_input)[0][0]
-    similar_items = sorted(list(enumerate(similarity_scores[index])), key=lambda x: x[1], reverse=True)[1:5]
+    req = request.get_json()
+    user_input = req['book_title']
+    print(Fore.CYAN + user_input + Style.RESET_ALL) #validating if input is recieved
+    datadf = books[books['Book-Title'] == user_input]
+    populardf = popular_df[popular_df["Book-Title"] == user_input]
+    info = {
+        "Title":    datadf['Book-Title'].iloc[0],
+        "Year" : datadf['Year-Of-Publication'].iloc[0],
+        "Author" : datadf['Book-Author'].iloc[0],
+        "image" : datadf['Image-URL-L'].iloc[0],
+        "votes": populardf['num_ratings'].values[0],
+        "rating": populardf['avg_rating'].values[0]
+    }
+    print(info)
+    index = np.where(pt.index == user_input)[0][0]  
+    similar_items = sorted(
+        list(enumerate(similarity_scores[index])), key=lambda x: x[1], reverse=True
+    )[1:5]
 
     data = []
     for i in similar_items:
         item = []
-        temp_df = books[books['Book-Title'] == pt.index[i[0]]]
-        item.extend(list(temp_df.drop_duplicates('Book-Title')['Book-Title'].values))
-        item.extend(list(temp_df.drop_duplicates('Book-Title')['Book-Author'].values))
-        item.extend(list(temp_df.drop_duplicates('Book-Title')['Image-URL-M'].values))
+        temp_df = books[books["Book-Title"] == pt.index[i[0]]]
+        item.extend(list(temp_df.drop_duplicates("Book-Title")["Book-Title"].values))
+        item.extend(list(temp_df.drop_duplicates("Book-Title")["Book-Author"].values))
+        item.extend(list(temp_df.drop_duplicates("Book-Title")["Image-URL-M"].values))
 
         data.append(item)
 
-    print(data)
+    render = render_template("description.html", details = info, data=data)
+    return jsonify({'html': render})
 
-    return render_template('recommend.html', data=data)
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
