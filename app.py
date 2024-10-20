@@ -40,11 +40,12 @@ def recommend():
         "Year" : datadf['Year-Of-Publication'].iloc[0],
         "Author" : datadf['Book-Author'].iloc[0],
         "image" : datadf['Image-URL-L'].iloc[0],
-        "votes": populardf['num_ratings'].values[0],
-        "rating": populardf['avg_rating'].values[0]
+        "votes": populardf['num_ratings'].values[0] if populardf['num_ratings'].size >0 else "No Votes",
+        "rating": populardf['avg_rating'].values[0] if populardf['avg_rating'].size >0 else "No Ratings"
     }
     print(info)
-    index = np.where(pt.index == user_input)[0][0]  
+    indexdf = np.where(pt.index == user_input) 
+    index = indexdf[0][0] if np.size(indexdf) > 0 else 0 
     similar_items = sorted(
         list(enumerate(similarity_scores[index])), key=lambda x: x[1], reverse=True
     )[1:5]
@@ -59,6 +60,7 @@ def recommend():
 
         data.append(item)
 
+    print(data)
     render = render_template("description.html", details = info, data=data)
     return jsonify({'html': render})
 
